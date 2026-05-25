@@ -3,7 +3,7 @@ package com.goodvision.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "CLIENTES")
+@Table(name = "`CLIENTES`")
 public class Cliente {
 
     @Id
