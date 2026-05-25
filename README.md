@@ -17,18 +17,40 @@ Backend del proyecto GoodVision desarrollado con Spring Boot, MySQL y JPA/Hibern
 - Postman
 
 ---
-
 # Arquitectura del proyecto
 
-El proyecto sigue una arquitectura por capas:
+El proyecto sigue una arquitectura por capas utilizando Spring Boot y JPA/Hibernate.
 
-- Controller
-- Service
-- Repository
-- Entity
-- Config
+## Estructura principal
 
----
+- controller
+- service
+- repository
+- entity
+- config
+- security
+- dto
+- exception
+
+## Arquitectura implementada
+
+### Controller
+Gestiona los endpoints REST de la aplicación.
+
+### Service
+Contiene la lógica de negocio del sistema.
+
+### Repository
+Gestiona el acceso a datos usando JPA/Hibernate.
+
+### Entity
+Representa las tablas de la base de datos MySQL.
+
+### Config
+Configuraciones generales del proyecto y seguridad.
+
+### Security
+Configuración temporal de Spring Security y futura integración JWT.
 
 # Requisitos previos
 
@@ -159,7 +181,6 @@ Started GoodvisionBackendApplication
 ```
 
 ---
-
 # Endpoints implementados
 
 ## CLIENTES
@@ -217,15 +238,87 @@ DELETE /api/cliente/{id}
 
 ---
 
+### Buscar clientes por apellido
+
+```http
+GET /api/cliente/buscar?apellido=Perez
+```
+
+---
+
+# PRODUCTOS
+
+## Obtener todos los productos
+
+```http
+GET /api/productos
+```
+
+---
+
+## Obtener producto por ID
+
+```http
+GET /api/productos/{id}
+```
+
+---
+
+## Registrar producto
+
+```http
+POST /api/productos
+```
+
+Ejemplo Body JSON:
+
+```json
+{
+  "nombreProducto": "Lente Blue Cut",
+  "precio": 250.00,
+  "categoria": {
+    "idCategoria": 1
+  }
+}
+```
+
+---
+
+## Actualizar producto
+
+```http
+PUT /api/productos/{id}
+```
+
+---
+
+## Eliminar producto
+
+```http
+DELETE /api/productos/{id}
+```
+
+---
+
+## Buscar productos por nombre
+
+```http
+GET /api/productos/buscar?nombre=Lente
+```
+
+---
+
 # Seguridad
 
-Actualmente el proyecto tiene una configuración temporal de seguridad para facilitar las pruebas de API durante el desarrollo.
+Actualmente el proyecto utiliza una configuración temporal de Spring Security para permitir las pruebas de endpoints durante el desarrollo.
 
-Posteriormente se implementará:
+La siguiente fase del proyecto implementará:
 
 - JWT Authentication
-- Roles
+- Roles de usuario
 - Protección de endpoints
+- Login y registro de usuarios
+- Autorización basada en roles
 
 ---
 
@@ -236,6 +329,35 @@ Las pruebas se realizan usando:
 - Postman
 
 ---
+# Módulos implementados
+
+## Módulo Clientes
+
+CRUD completo funcional:
+
+- Registrar clientes
+- Obtener clientes
+- Buscar clientes
+- Actualizar clientes
+- Eliminar clientes
+
+---
+
+## Módulo Productos
+
+CRUD completo funcional:
+
+- Registrar productos
+- Obtener productos
+- Buscar productos
+- Actualizar productos
+- Eliminar productos
+
+Incluye relación con:
+
+- Categorías
+
+mediante JPA/Hibernate.
 
 # Git Flow utilizado
 
