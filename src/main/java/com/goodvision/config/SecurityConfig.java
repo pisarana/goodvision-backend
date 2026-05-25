@@ -1,42 +1,66 @@
 package com.goodvision.config;
 
+import com.goodvision.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         /*
-         * TEMPORARY SECURITY CONFIGURATION
+         * FINAL JWT SECURITY CONFIGURATION
          *
-         * This configuration is used during backend development
-         * to allow testing API endpoints without authentication.
-         *
-         * Later this configuration will be replaced with:
-         * - JWT authentication
-         * - Role-based authorization
-         * - Protected endpoints
+         * This configuration:
+         * - enables JWT authentication
+         * - protects API endpoints
+         * - allows public authentication routes
+         * - disables Spring default login
          */
 
         http
 
-                // Disable CSRF for REST API testing
+                // Disable CSRF for REST API
                 .csrf(csrf -> csrf.disable())
 
-                // Allow access to all API endpoints temporarily
+                // Stateless session for JWT
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
+                // Endpoint authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll()
+
+                        // PUBLIC AUTH ENDPOINTS
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // PROTECTED ENDPOINTS
+                        .requestMatchers("/api/cliente/**").authenticated()
+                        .requestMatchers("/api/productos/**").authenticated()
+
+                        // ANY OTHER REQUEST
                         .anyRequest().authenticated()
                 )
 
-                // Default basic authentication
-                .httpBasic(Customizer.withDefaults());
+                // ADD JWT FILTER
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
