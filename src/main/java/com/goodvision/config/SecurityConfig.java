@@ -50,6 +50,7 @@ public class SecurityConfig {
 
                         // PROTECTED ENDPOINTS
                         .requestMatchers("/api/cliente/**").authenticated()
+                        .requestMatchers("/api/inventario/**").authenticated()
                         .requestMatchers("/api/productos/**").authenticated()
 
                         // ANY OTHER REQUEST
@@ -65,3 +66,5 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
+
