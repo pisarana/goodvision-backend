@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npm run build -- --configuration production",
+  "outputDirectory": "dist/goodvision-frontend/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
