@@ -1,0 +1,137 @@
+<section class="hero-band">
+  <div>
+    <p class="eyebrow">{{ status }}</p>
+    <h1>Panel de Control</h1>
+    <p class="copy">GoodVision Optica — productos, clientes, inventario, ventas y medidas.</p>
+  </div>
+  <img src="assets/brand/goodvision-logo.svg" alt="GoodVision">
+</section>
+
+@if (loading) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
+} @else {
+  <section class="stats-grid" aria-label="Resumen">
+    <article class="stat-card">
+      <span class="stat-icon icon-blue">P</span>
+      <div>
+        <span class="stat-label">Productos</span>
+        <strong class="stat-value">{{ totalProductos }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-green">C</span>
+      <div>
+        <span class="stat-label">Clientes</span>
+        <strong class="stat-value">{{ totalClientes }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-orange">V</span>
+      <div>
+        <span class="stat-label">Ventas totales</span>
+        <strong class="stat-value">{{ totalVentas }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-purple">M</span>
+      <div>
+        <span class="stat-label">Evaluaciones</span>
+        <strong class="stat-value">{{ totalMedidas }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-teal">S/</span>
+      <div>
+        <span class="stat-label">Ingresos (30 dias)</span>
+        <strong class="stat-value">S/ {{ ingresosMes | number:'1.0-0' }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-teal">~</span>
+      <div>
+        <span class="stat-label">Venta Promedio</span>
+        <strong class="stat-value">S/ {{ promedioVenta.toFixed(2) }}</strong>
+      </div>
+    </article>
+    <article class="stat-card" [class.alert]="alertasStockBajo.length > 0">
+      <span class="stat-icon" [class.icon-red]="alertasStockBajo.length > 0" [class.icon-gray]="alertasStockBajo.length === 0">!</span>
+      <div>
+        <span class="stat-label">Stock bajo</span>
+        <strong class="stat-value">{{ alertasStockBajo.length }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <section class="quick-view" aria-label="Vista rapida">
+    <article class="panel">
+      <div class="panel-head">
+        <h2>Ultimas Ventas</h2>
+        <a routerLink="/ventas" class="ver-mas">Ver todas</a>
+      </div>
+      <div class="compact-list">
+        @for (venta of ultimasVentas; track venta.idVenta) {
+          <div class="list-row">
+            <span>{{ venta.cliente.nombre }} {{ venta.cliente.apellido }}</span>
+            <strong>S/ {{ venta.total | number:'1.2-2' }}</strong>
+          </div>
+        } @empty {
+          <p class="empty">Sin ventas registradas.</p>
+        }
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h2>Productos Recientes</h2>
+        <a routerLink="/productos" class="ver-mas">Ver todos</a>
+      </div>
+      <div class="compact-list">
+        @for (prod of productosRecientes; track prod.idProducto) {
+          <div class="list-row">
+            <span>{{ prod.nombreProducto }}</span>
+            <strong>S/ {{ (+prod.precio) | number:'1.2-2' }}</strong>
+          </div>
+        } @empty {
+          <p class="empty">Sin productos registrados.</p>
+        }
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h2>Clientes Recientes</h2>
+        <a routerLink="/clientes" class="ver-mas">Ver todos</a>
+      </div>
+      <div class="compact-list">
+        @for (cliente of clientesRecientes; track cliente.idCliente) {
+          <div class="list-row">
+            <span>{{ cliente.nombre }} {{ cliente.apellido }}</span>
+            <strong>{{ cliente.documento }}</strong>
+          </div>
+        } @empty {
+          <p class="empty">Sin clientes registrados.</p>
+        }
+      </div>
+    </article>
+
+    @if (alertasStockBajo.length > 0) {
+      <article class="panel panel-alert">
+        <div class="panel-head">
+          <h2>Alerta: Stock Bajo</h2>
+          <a routerLink="/inventario" class="ver-mas">Ver inventario</a>
+        </div>
+        <div class="compact-list">
+          @for (item of alertasStockBajo; track item.idInventario) {
+            <div class="list-row">
+              <span>{{ item.producto.nombreProducto }}</span>
+              <strong class="stock-badge">{{ item.stock }} / {{ item.stockMinimo }}</strong>
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </section>
+}

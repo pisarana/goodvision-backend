@@ -1,0 +1,188 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">Reportes y Analisis</h1>
+      <p class="dashboard-subtitle">Panel de control para ventas y metricas</p>
+    </div>
+
+    <div class="header-actions">
+      <div class="filter-buttons">
+        <button class="filter-btn" [class.active]="filtroActual === 'TODO'" (click)="aplicarFiltro('TODO')">Todo</button>
+        <button class="filter-btn" [class.active]="filtroActual === 'MES'" (click)="aplicarFiltro('MES')">Mes</button>
+        <button class="filter-btn" [class.active]="filtroActual === 'SEMANA'" (click)="aplicarFiltro('SEMANA')">Semana</button>
+        <button class="filter-btn" [class.active]="filtroActual === 'HOY'" (click)="aplicarFiltro('HOY')">Hoy</button>
+      </div>
+
+      <div class="export-actions">
+        <button class="export-btn" (click)="exportarCSV()">
+          <span class="export-icon">↓</span> Exportar CSV
+        </button>
+        <button class="export-btn export-pdf" (click)="exportarPDF()">
+          <span class="export-icon">⎙</span> Exportar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-section">
+    <div class="metric-card">
+      <div class="metric-icon total-icon">S/</div>
+      <div class="metric-content">
+        <p class="metric-label">Total Ventas</p>
+        <h2 class="metric-value">S/ {{ totalVentas | number:'1.2-2' }}</h2>
+        <p class="metric-trend neutral">{{ getPeriodoLabel() }}</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon count-icon">#</div>
+      <div class="metric-content">
+        <p class="metric-label">Cantidad de Ventas</p>
+        <h2 class="metric-value">{{ cantidadVentas }}</h2>
+        <p class="metric-trend neutral">transacciones</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon avg-icon">~</div>
+      <div class="metric-content">
+        <p class="metric-label">Promedio por Venta</p>
+        <h2 class="metric-value">S/ {{ promedioVenta | number:'1.2-2' }}</h2>
+        <p class="metric-trend neutral">por operacion</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Ventas por Metodo de Pago</h3>
+        <p class="chart-subtitle">Distribucion de metodos utilizados</p>
+      </div>
+
+      <div class="chart-content">
+        @if (ventasPorMetodo.length === 0) {
+          <p class="empty-state">Sin datos para el periodo seleccionado</p>
+        } @else {
+          <div class="payment-chart">
+            @for (metodo of ventasPorMetodo; track metodo.metodoPago) {
+              <div class="payment-bar-container">
+                <div class="payment-bar-label">
+                  <span class="payment-name">{{ metodo.metodoPago }}</span>
+                  <span class="payment-value">S/ {{ metodo.total | number:'1.0-0' }}</span>
+                </div>
+                <div class="payment-bar-wrapper">
+                  <div
+                    class="payment-bar"
+                    [style.width.%]="totalVentas > 0 ? (metodo.total / totalVentas) * 100 : 0"
+                    [attr.data-metodo]="metodo.metodoPago">
+                  </div>
+                  <span class="payment-percentage">
+                    {{ totalVentas > 0 ? ((metodo.total / totalVentas) * 100 | number:'1.1-1') : '0.0' }}%
+                  </span>
+                </div>
+                <div class="payment-count">{{ metodo.cantidad }} ventas</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Top 10 Productos Mas Vendidos</h3>
+        <p class="chart-subtitle">Ranking por ingresos generados</p>
+      </div>
+
+      <div class="chart-content">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="rank-col">#</th>
+                <th class="product-col">Producto</th>
+                <th class="quantity-col">Cantidad</th>
+                <th class="revenue-col">Ingresos</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (producto of topProductos; track producto.nombre; let i = $index) {
+                <tr class="table-row" [class.top-rank]="i < 3">
+                  <td class="rank-col">
+                    <span class="rank-badge" [class.gold]="i === 0" [class.silver]="i === 1" [class.bronze]="i === 2">
+                      {{ i + 1 }}
+                    </span>
+                  </td>
+                  <td class="product-col">
+                    <div class="product-info">
+                      <span class="product-name">{{ producto.nombre }}</span>
+                      <span class="product-category">{{ producto.categoria }}</span>
+                    </div>
+                  </td>
+                  <td class="quantity-col">
+                    <span class="quantity-badge">{{ producto.cantidadVendida }}</span>
+                  </td>
+                  <td class="revenue-col">
+                    <span class="revenue-amount">S/ {{ producto.ingresos | number:'1.2-2' }}</span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-state">No hay datos disponibles</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <h3 class="section-title">Ultimas Evaluaciones de Medidas</h3>
+      <p class="section-subtitle">Evaluaciones oftalmologicas recientes</p>
+    </div>
+
+    <div class="section-content">
+      <div class="table-container">
+        <table class="data-table evaluations-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Especialista</th>
+              <th>OD - Esfera</th>
+              <th>OD - Cilindro</th>
+              <th>OI - Esfera</th>
+              <th>OI - Cilindro</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (eval of ultimasEvaluaciones; track eval.fecha) {
+              <tr class="table-row">
+                <td><span class="date-badge">{{ eval.fecha | date:'dd/MM/yyyy' }}</span></td>
+                <td><div class="client-info"><span class="client-name">{{ eval.cliente }}</span></div></td>
+                <td><span class="specialist-name">{{ eval.especialista }}</span></td>
+                <td class="measure-col"><span class="measure-value">{{ eval.odEsfera > 0 ? '+' : '' }}{{ eval.odEsfera }}</span></td>
+                <td class="measure-col"><span class="measure-value">{{ eval.odCilindro > 0 ? '+' : '' }}{{ eval.odCilindro }}</span></td>
+                <td class="measure-col"><span class="measure-value">{{ eval.oiEsfera > 0 ? '+' : '' }}{{ eval.oiEsfera }}</span></td>
+                <td class="measure-col"><span class="measure-value">{{ eval.oiCilindro > 0 ? '+' : '' }}{{ eval.oiCilindro }}</span></td>
+                <td><span class="status-badge completed">Completada</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="empty-state">No hay evaluaciones recientes</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Cargando datos...</p>
+    </div>
+  }
+</div>

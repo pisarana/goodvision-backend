@@ -1,567 +1,251 @@
-# GoodVision Backend
+# GoodVision — Sistema de Gestión de Óptica
 
-Backend del proyecto GoodVision desarrollado con Spring Boot, MySQL y JPA/Hibernate para el curso de Desarrollo Web Integrado.
+Aplicación web full-stack para gestión de una óptica: productos, clientes, inventario, ventas y evaluaciones ópticas.
 
----
+## Stack
 
-# Tecnologías utilizadas
-
-- Java 21
-- Spring Boot 4
-- Spring Web
-- Spring Data JPA
-- Spring Security
-- JWT Authentication
-- MySQL 8
-- Docker
-- Maven
-- Postman
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Java 21 · Spring Boot 4 · Spring Security + JWT · Spring Data JPA |
+| Base de datos | MySQL 8 |
+| Frontend | Angular 18 · TypeScript 5 · RxJS 7 |
+| Build | Maven (backend) · npm / Angular CLI (frontend) |
 
 ---
 
-# Arquitectura del proyecto
+## Estructura del repositorio
 
-El proyecto sigue una arquitectura por capas utilizando Spring Boot y JPA/Hibernate.
-
-## Estructura principal
-
-- controller
-- service
-- repository
-- entity
-- config
-- security
-- dto
-
----
-
-# Arquitectura implementada
-
-## Controller
-
-Gestiona los endpoints REST de la aplicación.
-
-## Service
-
-Contiene la lógica de negocio del sistema.
-
-## Repository
-
-Gestiona el acceso a datos usando JPA/Hibernate.
-
-## Entity
-
-Representa las tablas de la base de datos MySQL.
-
-## Config
-
-Configuraciones generales del proyecto y seguridad.
-
-## Security
-
-Implementación de autenticación JWT y protección de endpoints.
-
-## DTO
-
-Objetos utilizados para login, registro y respuestas de autenticación.
-
----
-
-# Requisitos previos
-
-Antes de ejecutar el proyecto se necesita tener instalado:
-
-## Software necesario
-
-- Java JDK 21
-- Maven
-- Docker Desktop
-- Git
-- IDE (VSCode, IntelliJ o NetBeans)
-- Postman
-- DBeaver o MySQL Workbench
-
----
-
-# Clonar repositorio
-
-```bash
-git clone https://github.com/pisarana/goodvision-backend.git
 ```
-
-Entrar al proyecto:
-
-```bash
-cd goodvision-backend
+goodvision-backend/
+├── src/
+│   ├── main/java/com/goodvision/
+│   │   ├── controller/         ← endpoints REST
+│   │   ├── service/            ← lógica de negocio
+│   │   ├── repository/         ← acceso a datos (JPA)
+│   │   ├── entity/             ← entidades JPA
+│   │   ├── dto/                ← DTOs de autenticación
+│   │   ├── security/           ← JWT filter + utils
+│   │   ├── config/             ← SecurityConfig + CORS
+│   │   └── exception/          ← excepciones + GlobalExceptionHandler
+│   ├── main/resources/
+│   │   └── application.properties
+│   └── database/
+│       └── dump-good_vision-*.sql   ← esquema de la base de datos
+├── frontend/                   ← aplicación Angular 18
+│   ├── src/app/
+│   │   ├── core/               ← dominio, repositorios, servicios de aplicación
+│   │   └── presentation/       ← páginas y layout
+│   ├── proxy.conf.json         ← proxy /api → localhost:8080
+│   └── package.json
+├── pom.xml
+└── README.md
 ```
 
 ---
 
-# Configuración de MySQL con Docker
+## Requisitos previos
 
-## Descargar imagen MySQL
-
-```bash
-docker pull mysql:8.0
-```
+- **Java 21** (JDK)
+- **Maven 3.9+** — incluido como `mvnw` / `mvnw.cmd` en el proyecto
+- **Node.js 20+** y **npm**
+- **Angular CLI**: `npm install -g @angular/cli`
+- **Docker Desktop** (recomendado para MySQL)
 
 ---
 
-## Crear contenedor MySQL
+## 1. Configurar la base de datos
 
-### Windows PowerShell
+### Opción A — Docker (recomendado)
 
+**Windows PowerShell:**
 ```powershell
-docker run --name mysql-dev `
--e MYSQL_ROOT_PASSWORD=root `
--e MYSQL_DATABASE=good_vision `
--p 3306:3306 `
--d mysql:8.0
+docker run --name mysql-goodvision `
+  -e MYSQL_ROOT_PASSWORD=root `
+  -e MYSQL_DATABASE=good_vision `
+  -p 3306:3306 `
+  -d mysql:8.0
 ```
 
----
+**Linux / macOS:**
+```bash
+docker run --name mysql-goodvision \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=good_vision \
+  -p 3306:3306 \
+  -d mysql:8.0
+```
 
-## Verificar contenedor
+### Opción B — MySQL local
+
+Crear la base de datos `good_vision` con usuario `root` / contraseña `root`, o ajustar `src/main/resources/application.properties`.
+
+### Importar el esquema
 
 ```bash
-docker ps
+mysql -u root -p good_vision < src/database/dump-good_vision-202605251239.sql
 ```
 
 ---
 
-# Configuración de la base de datos
+## 2. Ejecutar el backend
 
-Abrir DBeaver o MySQL Workbench.
+Desde la raíz del proyecto:
 
-Crear conexión con:
+```bash
+# Linux / macOS / WSL
+./mvnw spring-boot:run
 
-| Configuración | Valor |
-|---|---|
-| Host | localhost |
-| Puerto | 3306 |
-| Usuario | root |
-| Password | root |
+# Windows CMD
+mvnw.cmd spring-boot:run
 
----
-
-# Ejecutar script SQL
-
-Ejecutar:
-
-```sql
-good_vision_tablas.sql
-```
-
----
-
-# Configuración adicional para JWT
-
-Ejecutar también:
-
-```sql
-ALTER TABLE USUARIOS
-ADD COLUMN password VARCHAR(255) NOT NULL,
-ADD COLUMN role VARCHAR(30) NOT NULL DEFAULT 'ESPECIALISTA';
-```
-
----
-
-# Configuración del backend
-
-Abrir:
-
-```properties
-src/main/resources/application.properties
-```
-
-Configurar:
-
-```properties
-spring.application.name=goodvision-backend
-
-spring.datasource.url=jdbc:mysql://localhost:3306/good_vision?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=root
-
-spring.jpa.hibernate.ddl-auto=none
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-
-server.port=8080
-```
-
----
-
-# Ejecutar proyecto
-
-## Windows PowerShell
-
-```powershell
+# Windows PowerShell
 .\mvnw spring-boot:run
 ```
 
-## CMD
+Esperar: `Started GoodvisionBackendApplication`  
+El servidor queda en **http://localhost:8080**
 
-```cmd
-mvnw spring-boot:run
+---
+
+## 3. Ejecutar el frontend
+
+```bash
+cd frontend
+
+# Instalar dependencias (solo la primera vez)
+npm install
+
+# Iniciar servidor de desarrollo
+npm start
+```
+
+El frontend queda en **http://localhost:4200**  
+El proxy en `proxy.conf.json` redirige `/api/*` → `http://localhost:8080` automáticamente.
+
+---
+
+## Orden de arranque
+
+```
+1. MySQL (Docker o local)
+2. Backend  →  ./mvnw spring-boot:run
+3. Frontend →  cd frontend && npm start
+4. Abrir    →  http://localhost:4200
 ```
 
 ---
 
-# Verificar ejecución
+## Primer acceso
 
-Si todo funciona correctamente aparecerá:
+En la pantalla de login, hacer clic en **"Registrar"** para crear la primera cuenta.
 
-```txt
-Started GoodvisionBackendApplication
-```
-
----
-
-# Configuración JWT
-
-El sistema implementa autenticación basada en JWT (JSON Web Token).
-
-## Funcionalidades implementadas
-
-- Registro de usuarios
-- Login de usuarios
-- Generación de JWT
-- Protección de endpoints
-- Bearer Token Authentication
-- Validación de token
-- Contraseñas encriptadas con BCrypt
+Roles disponibles:
+| Rol | Permisos |
+|-----|----------|
+| **ADMIN** | Acceso completo: crear, editar y eliminar todo; gestionar usuarios |
+| **ESPECIALISTA** | Puede crear ventas y evaluaciones, pero no eliminarlas |
 
 ---
 
-# Flujo de autenticación
+## Módulos de la aplicación
 
-## 1. Registrar usuario
-
-Endpoint:
-
-```http
-POST /api/auth/register
-```
-
-Body JSON:
-
-```json
-{
-  "nombre": "Misael",
-  "apellido": "Challco",
-  "correo": "misael@gmail.com",
-  "telefono": "999999999",
-  "direccion": "Lima",
-  "password": "123456",
-  "role": "ADMIN"
-}
-```
+| Módulo | Descripción |
+|--------|-------------|
+| **Dashboard** | KPIs: total productos, clientes, ventas del mes, ingresos, stock bajo, venta promedio |
+| **Productos** | CRUD con categorías |
+| **Categorías** | CRUD de categorías de productos |
+| **Clientes** | CRUD con validaciones + modal de reporte por cliente (ventas + evaluaciones ópticas) |
+| **Inventario** | Control de stock con alertas de mínimo |
+| **Ventas** | POS con catálogo de productos, carrito, cliente y método de pago |
+| **Medidas** | Evaluaciones ópticas OD/OI (esfera, cilindro, eje) con historial expandible |
+| **Reportes** | Métricas por período, top productos, exportación CSV y PDF |
+| **Usuarios** | Gestión de cuentas (solo ADMIN) |
 
 ---
 
-## 2. Iniciar sesión
+## API REST
 
-Endpoint:
+Base URL: `http://localhost:8080/api`
+
+| Módulo | Método | Endpoint | Rol requerido |
+|--------|--------|----------|---------------|
+| Auth | POST | `/auth/register` | Público |
+| Auth | POST | `/auth/login` | Público |
+| Clientes | GET/POST/PUT/DELETE | `/cliente` | JWT |
+| Productos | GET/POST/PUT/DELETE | `/productos` | JWT |
+| Categorías | GET/POST/PUT/DELETE | `/categorias` | JWT |
+| Inventario | GET/POST/PUT/DELETE | `/inventario` | JWT |
+| Ventas | GET | `/ventas` | JWT |
+| Ventas | POST | `/ventas` | ADMIN / ESPECIALISTA |
+| Ventas | DELETE | `/ventas/{id}` | ADMIN |
+| Medidas | GET | `/medidas` | JWT |
+| Medidas | POST | `/medidas` | ADMIN / ESPECIALISTA |
+| Medidas | DELETE | `/medidas/{id}` | ADMIN |
+| Usuarios | GET/PUT/DELETE | `/usuarios` | ADMIN |
+| Usuarios | POST | `/usuarios` | ADMIN |
+
+### Ejemplo de autenticación
 
 ```http
 POST /api/auth/login
-```
+Content-Type: application/json
 
-Body JSON:
-
-```json
 {
-  "correo": "misael@gmail.com",
-  "password": "123456"
+  "correo": "admin@goodvision.pe",
+  "password": "tupassword"
 }
 ```
 
-Respuesta esperada:
-
+Responde con:
 ```json
-{
-  "token": "eyJhbGciOiJIUzI1Ni..."
-}
+{ "token": "eyJhbGciOiJIUzI1Ni..." }
+```
+
+Incluir en todas las peticiones protegidas:
+```
+Authorization: Bearer <token>
 ```
 
 ---
 
-## 3. Usar Bearer Token
+## Build de producción
 
-### En Postman
+```bash
+# Backend — genera JAR ejecutable
+./mvnw clean package -DskipTests
+java -jar target/goodvision-backend-*.jar
 
-- Ir a:
-  Authorization
+# Frontend — genera archivos estáticos en frontend/dist/
+cd frontend
+npm run build
+```
 
-- Seleccionar:
-  Bearer Token
+Para producción, actualizar `frontend/src/environments/environment.ts` con la URL real del backend y configurar CORS en `src/main/java/com/goodvision/config/SecurityConfig.java`.
 
-- Pegar el JWT generado
+---
 
-Ejemplo:
+## Configuración
 
-```txt
-Bearer eyJhbGciOiJIUzI1Ni...
+### Backend — `application.properties`
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/good_vision?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=root
+server.port=8080
+```
+
+### Frontend — `environment.ts`
+
+```typescript
+export const environment = {
+  production: false,
+  apiBaseUrl: 'http://localhost:8080/api'
+};
 ```
 
 ---
 
-# Endpoints públicos
-
-```http
-POST /api/auth/register
-POST /api/auth/login
-```
-
----
-
-# Endpoints protegidos
-
-```http
-GET /api/cliente
-POST /api/cliente
-PUT /api/cliente/{id}
-DELETE /api/cliente/{id}
-
-GET /api/productos
-POST /api/productos
-PUT /api/productos/{id}
-DELETE /api/productos/{id}
-```
-
-Todos requieren JWT válido.
-
----
-
-# Endpoints implementados
-
-# CLIENTES
-
-## Obtener todos los clientes
-
-```http
-GET /api/cliente
-```
-
-## Obtener cliente por ID
-
-```http
-GET /api/cliente/{id}
-```
-
-## Registrar cliente
-
-```http
-POST /api/cliente
-```
-
-Body JSON:
-
-```json
-{
-  "nombre": "Juan",
-  "apellido": "Perez",
-  "documento": "12345678",
-  "telefono": "987654321",
-  "direccion": "Av Lima 123",
-  "correo": "juan@gmail.com"
-}
-```
-
-## Actualizar cliente
-
-```http
-PUT /api/cliente/1
-```
-
-Body JSON:
-
-```json
-{
-  "nombre": "Juan Carlos",
-  "apellido": "Perez",
-  "documento": "12345678",
-  "telefono": "999999999",
-  "direccion": "Av Peru 999",
-  "correo": "juancarlos@gmail.com"
-}
-```
-
-## Eliminar cliente
-
-```http
-DELETE /api/cliente/1
-```
-
-## Buscar cliente por apellido
-
-```http
-GET /api/cliente/buscar?apellido=Perez
-```
-
----
-
-# PRODUCTOS
-
-## Obtener todos los productos
-
-```http
-GET /api/productos
-```
-
-## Obtener producto por ID
-
-```http
-GET /api/productos/1
-```
-
-## Registrar producto
-
-```http
-POST /api/productos
-```
-
-Body JSON:
-
-```json
-{
-  "nombreProducto": "Lente Blue Cut",
-  "precio": 250.00,
-  "categoria": {
-    "idCategoria": 1
-  }
-}
-```
-
-## Actualizar producto
-
-```http
-PUT /api/productos/1
-```
-
-Body JSON:
-
-```json
-{
-  "nombreProducto": "Lente Anti Luz Azul",
-  "precio": 300.00,
-  "categoria": {
-    "idCategoria": 1
-  }
-}
-```
-
-## Eliminar producto
-
-```http
-DELETE /api/productos/1
-```
-
-## Buscar producto por nombre
-
-```http
-GET /api/productos/buscar?nombre=Lente
-```
-
----
-
-# Pruebas API
-
-Las pruebas de la API fueron realizadas utilizando:
-
-- Postman
-- DBeaver
-- MySQL
-- Docker
-
----
-
-# Validaciones realizadas
-
-## CLIENTES
-
-- Registro de clientes
-- Obtención de clientes
-- Actualización de clientes
-- Eliminación de clientes
-- Búsqueda de clientes
-
-## PRODUCTOS
-
-- Registro de productos
-- Obtención de productos
-- Actualización de productos
-- Eliminación de productos
-- Relación con categorías
-
-## JWT
-
-- Registro de usuarios
-- Login de usuarios
-- Generación correcta de JWT
-- Protección de endpoints
-- Validación Bearer Token
-- Restricción sin token
-
----
-
-# Módulos implementados
-
-## Módulo Clientes
-
-CRUD completo funcional.
-
-## Módulo Productos
-
-CRUD completo funcional con relación a categorías mediante JPA/Hibernate.
-
-## Módulo Seguridad
-
-Implementación de:
-
-- JWT Authentication
-- Spring Security
-- Login
-- Registro
-- Bearer Token
-- BCrypt Password Encoding
-
----
-
-# Git Flow utilizado
-
-El proyecto utiliza dos ramas principales:
-
-| Rama | Uso |
-|---|---|
-| main | Producción |
-| dev | Desarrollo |
-
----
-
-# Configuración importante
-
-## Base de datos
-
-| Configuración | Valor |
-|---|---|
-| Database | good_vision |
-| Usuario | root |
-| Password | root |
-| Puerto | 3306 |
-
-## JWT
-
-| Configuración | Valor |
-|---|---|
-| Algoritmo | HS256 |
-| Expiración | 24 horas |
-| Tipo | Bearer Token |
-
----
-
-# Integrantes
+## Integrantes
 
 - Misael Challco
-- Integrantes del equipo

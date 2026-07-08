@@ -1,0 +1,203 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Usuarios</h1>
+      <p class="subtitle">Gestion de cuentas del sistema</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="showCreateForm ? cancelCreate() : (showCreateForm = true)">
+      {{ showCreateForm ? 'Cancelar' : '+ Nuevo Usuario' }}
+    </button>
+  </div>
+
+  @if (message) {
+    <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+      {{ message }}
+    </div>
+  }
+
+  @if (showCreateForm) {
+    <section class="form-card">
+      <div class="form-card-head">
+        <h2>Nuevo Usuario</h2>
+        <button type="button" class="btn-ghost" (click)="cancelCreate()">Cancelar</button>
+      </div>
+
+      <form [formGroup]="createForm" (ngSubmit)="createUser()" class="form-grid">
+        <label class="field">
+          <span>Nombre *</span>
+          <input type="text" formControlName="nombre" placeholder="Nombre">
+          @if (createForm.get('nombre')?.invalid && createForm.get('nombre')?.touched) {
+            <small class="field-error">Nombre requerido (solo letras)</small>
+          }
+        </label>
+        <label class="field">
+          <span>Apellido *</span>
+          <input type="text" formControlName="apellido" placeholder="Apellido">
+          @if (createForm.get('apellido')?.invalid && createForm.get('apellido')?.touched) {
+            <small class="field-error">Apellido requerido (solo letras)</small>
+          }
+        </label>
+        <label class="field">
+          <span>Correo *</span>
+          <input type="email" formControlName="correo" placeholder="correo@ejemplo.com">
+          @if (createForm.get('correo')?.invalid && createForm.get('correo')?.touched) {
+            <small class="field-error">Correo valido requerido</small>
+          }
+        </label>
+        <label class="field">
+          <span>Contrasena * <small>(minimo 8 caracteres)</small></span>
+          <input type="password" formControlName="password" placeholder="••••••••">
+          @if (createForm.get('password')?.invalid && createForm.get('password')?.touched) {
+            <small class="field-error">Contrasena requerida (minimo 8 caracteres)</small>
+          }
+        </label>
+        <label class="field">
+          <span>Rol *</span>
+          <select formControlName="role">
+            <option value="ADMIN">Administrador</option>
+            <option value="ESPECIALISTA">Especialista</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Telefono <small>(9 digitos, opcional)</small></span>
+          <input type="text" formControlName="telefono" placeholder="999999999">
+          @if (createForm.get('telefono')?.invalid && createForm.get('telefono')?.touched) {
+            <small class="field-error">Telefono debe tener 9 digitos</small>
+          }
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            {{ loading ? 'Creando...' : 'Crear Usuario' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancelCreate()">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (editingId) {
+    <section class="form-card">
+      <div class="form-card-head">
+        <h2>Editar Usuario</h2>
+        <button type="button" class="btn-ghost" (click)="reset()">Cancelar</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+        <label class="field">
+          <span>Nombre *</span>
+          <input type="text" formControlName="nombre" placeholder="Nombre">
+        </label>
+        <label class="field">
+          <span>Apellido *</span>
+          <input type="text" formControlName="apellido" placeholder="Apellido">
+        </label>
+        <label class="field">
+          <span>Correo *</span>
+          <input type="email" formControlName="correo" placeholder="correo@ejemplo.com">
+        </label>
+        <label class="field">
+          <span>Telefono</span>
+          <input type="text" formControlName="telefono" placeholder="999 999 999">
+        </label>
+        <label class="field">
+          <span>Direccion</span>
+          <input type="text" formControlName="direccion" placeholder="Direccion">
+        </label>
+        <label class="field">
+          <span>Estado</span>
+          <select formControlName="estado">
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Rol *</span>
+          <select formControlName="role">
+            <option value="ADMIN">Administrador</option>
+            <option value="ESPECIALISTA">Especialista</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Nueva contrasena <small>(dejar en blanco para no cambiar)</small></span>
+          <input type="password" formControlName="password" placeholder="••••••••">
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            {{ loading ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="reset()">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="list-section">
+    <div class="list-header">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="load(searchTerm)"
+          placeholder="Buscar por nombre...">
+      </div>
+      <span class="count">{{ usuarios.length }} usuario(s)</span>
+    </div>
+
+    @if (loading && usuarios.length === 0) {
+      <div class="loading"><div class="spinner"></div></div>
+    } @else if (usuarios.length === 0) {
+      <div class="empty-state">No hay usuarios registrados.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Telefono</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Fecha Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of usuarios; track u.idUsuario) {
+              <tr [class.row-editing]="u.idUsuario === editingId">
+                <td class="id-col">#{{ u.idUsuario }}</td>
+                <td class="name-col">
+                  <div class="user-cell">
+                    <span class="avatar">{{ u.nombre.charAt(0) }}{{ u.apellido.charAt(0) }}</span>
+                    <div>
+                      <strong>{{ u.nombre }} {{ u.apellido }}</strong>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ u.correo }}</td>
+                <td>{{ u.telefono || '—' }}</td>
+                <td>
+                  <span class="badge" [class.badge-admin]="u.role === 'ADMIN'" [class.badge-esp]="u.role === 'ESPECIALISTA'">
+                    {{ u.role === 'ADMIN' ? 'Admin' : 'Especialista' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-active]="u.estado === 'ACTIVO'" [class.badge-inactive]="u.estado === 'INACTIVO'">
+                    {{ u.estado || 'ACTIVO' }}
+                  </span>
+                </td>
+                <td>{{ u.fechaRegistro ? (u.fechaRegistro | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="actions-col">
+                  <button class="btn-edit" (click)="edit(u)" title="Editar">Editar</button>
+                  <button class="btn-delete" (click)="remove(u)" title="Eliminar">Eliminar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

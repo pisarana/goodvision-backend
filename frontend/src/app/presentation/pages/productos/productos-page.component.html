@@ -1,0 +1,103 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Catálogo</p>
+    <h1>Productos</h1>
+  </div>
+  <form class="search" (ngSubmit)="load(searchTerm)">
+    <input name="search" [(ngModel)]="searchTerm" placeholder="Buscar por nombre…">
+    <button type="submit">Buscar</button>
+  </form>
+</header>
+
+@if (message) {
+  <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+    {{ messageType === 'success' ? '✓' : '⚠' }} {{ message }}
+  </div>
+}
+
+<section class="grid">
+  <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+    <h2>{{ form.controls.idProducto.value ? 'Editar producto' : 'Nuevo producto' }}</h2>
+
+    <label>
+      Nombre
+      <input formControlName="nombreProducto" type="text" placeholder="Ej: Lente Blue Cut Premium"
+        [class.input-error]="form.controls.nombreProducto.invalid && form.controls.nombreProducto.touched">
+      @if (form.controls.nombreProducto.touched && form.controls.nombreProducto.errors?.['required']) {
+        <small class="field-error">El nombre del producto es obligatorio.</small>
+      }
+    </label>
+
+    <label>
+      Precio (S/)
+      <input formControlName="precio" type="number" min="0.01" step="0.01" placeholder="0.00"
+        [class.input-error]="form.controls.precio.invalid && form.controls.precio.touched">
+      @if (form.controls.precio.touched) {
+        @if (form.controls.precio.errors?.['required']) {
+          <small class="field-error">El precio es obligatorio.</small>
+        } @else if (form.controls.precio.errors?.['min']) {
+          <small class="field-error">El precio debe ser mayor a S/ 0.00.</small>
+        }
+      }
+    </label>
+
+    <label>
+      Categoría
+      <select formControlName="idCategoria"
+        [class.input-error]="form.controls.idCategoria.invalid && form.controls.idCategoria.touched">
+        <option [value]="0" disabled>Seleccionar categoría…</option>
+        @for (cat of categorias; track cat.idCategoria) {
+          <option [value]="cat.idCategoria">{{ cat.nombreCategoria }}</option>
+        }
+      </select>
+      @if (form.controls.idCategoria.touched && form.controls.idCategoria.errors?.['min']) {
+        <small class="field-error">Debes seleccionar una categoría.</small>
+      }
+    </label>
+
+    <div class="actions">
+      <button class="primary" type="submit" [disabled]="loading">
+        {{ form.controls.idProducto.value ? 'Actualizar' : 'Guardar' }}
+      </button>
+      <button class="ghost" type="button" (click)="reset()">Limpiar</button>
+    </div>
+  </form>
+
+  <section class="table-panel">
+    <div class="table-head">
+      <h2>Lista de productos</h2>
+      <span>{{ productos.length }} registros</span>
+    </div>
+    <div class="table-wrap">
+      @if (loading) {
+        <p class="empty">Cargando…</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (producto of productos; track producto.idProducto) {
+              <tr>
+                <td>{{ producto.nombreProducto }}</td>
+                <td>{{ producto.categoria?.nombreCategoria || '—' }}</td>
+                <td>S/ {{ (+producto.precio).toFixed(2) }}</td>
+                <td class="row-actions">
+                  <button type="button" (click)="edit(producto)">Editar</button>
+                  <button type="button" class="danger" (click)="remove(producto)">Eliminar</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty">Sin productos registrados.</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </section>
+</section>

@@ -1,0 +1,211 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Pacientes</p>
+    <h1>Clientes</h1>
+  </div>
+  <form class="search" (ngSubmit)="load(searchTerm)">
+    <input name="search" [(ngModel)]="searchTerm" placeholder="Buscar por apellido">
+    <button type="submit">Buscar</button>
+  </form>
+</header>
+
+@if (message) {
+  <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+    {{ messageType === 'success' ? '✓' : '⚠' }} {{ message }}
+  </div>
+}
+
+<section class="grid">
+  <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+    <h2>{{ form.controls.idCliente.value ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+
+    <label>
+      Nombre
+      <input formControlName="nombre" type="text" placeholder="Solo letras"
+        [class.input-error]="form.controls.nombre.invalid && form.controls.nombre.touched">
+      @if (form.controls.nombre.touched) {
+        @if (form.controls.nombre.errors?.['required']) {
+          <small class="field-error">El nombre es obligatorio.</small>
+        } @else if (form.controls.nombre.errors?.['pattern']) {
+          <small class="field-error">Solo se permiten letras y espacios.</small>
+        } @else if (form.controls.nombre.errors?.['maxlength']) {
+          <small class="field-error">Máximo 60 caracteres.</small>
+        }
+      }
+    </label>
+
+    <label>
+      Apellido
+      <input formControlName="apellido" type="text" placeholder="Solo letras"
+        [class.input-error]="form.controls.apellido.invalid && form.controls.apellido.touched">
+      @if (form.controls.apellido.touched) {
+        @if (form.controls.apellido.errors?.['required']) {
+          <small class="field-error">El apellido es obligatorio.</small>
+        } @else if (form.controls.apellido.errors?.['pattern']) {
+          <small class="field-error">Solo se permiten letras y espacios.</small>
+        }
+      }
+    </label>
+
+    <label>
+      Documento (DNI / Pasaporte)
+      <input formControlName="documento" type="text" placeholder="Ej: 12345678"
+        [class.input-error]="form.controls.documento.invalid && form.controls.documento.touched">
+      @if (form.controls.documento.touched) {
+        @if (form.controls.documento.errors?.['required']) {
+          <small class="field-error">El documento es obligatorio.</small>
+        } @else if (form.controls.documento.errors?.['pattern']) {
+          <small class="field-error">Solo dígitos, entre 8 y 12 caracteres.</small>
+        }
+      }
+    </label>
+
+    <label>
+      Teléfono <span class="optional">(opcional)</span>
+      <input formControlName="telefono" type="tel" placeholder="999999999"
+        [class.input-error]="form.controls.telefono.invalid && form.controls.telefono.touched">
+      @if (form.controls.telefono.touched && form.controls.telefono.errors?.['pattern']) {
+        <small class="field-error">Ingresa exactamente 9 dígitos (ej: 987654321).</small>
+      }
+    </label>
+
+    <label>
+      Dirección <span class="optional">(opcional)</span>
+      <input formControlName="direccion" type="text" placeholder="Av. Ejemplo 123, Lima">
+    </label>
+
+    <label>
+      Correo electrónico <span class="optional">(opcional)</span>
+      <input formControlName="correo" type="email" placeholder="correo@dominio.com"
+        [class.input-error]="form.controls.correo.invalid && form.controls.correo.touched">
+      @if (form.controls.correo.touched && form.controls.correo.errors?.['email']) {
+        <small class="field-error">Ingresa un correo válido (ej: nombre&#64;dominio.com).</small>
+      }
+    </label>
+
+    <div class="actions">
+      <button class="primary" type="submit" [disabled]="loading">
+        {{ form.controls.idCliente.value ? 'Actualizar' : 'Guardar' }}
+      </button>
+      <button class="ghost" type="button" (click)="reset()">Limpiar</button>
+    </div>
+  </form>
+
+  <section class="table-panel">
+    <div class="table-head">
+      <h2>Lista de clientes</h2>
+      <span>{{ clientes.length }} registros</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">Cliente</th>
+            <th class="col-doc">Documento</th>
+            <th class="col-phone">Teléfono</th>
+            <th class="col-email">Correo</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cliente of clientes; track cliente.idCliente) {
+            <tr>
+              <td class="text-cell">{{ cliente.nombre }} {{ cliente.apellido }}</td>
+              <td class="text-cell">{{ cliente.documento }}</td>
+              <td class="text-cell">{{ cliente.telefono || '—' }}</td>
+              <td class="text-cell">{{ cliente.correo || '—' }}</td>
+              <td class="row-actions col-actions">
+                <button type="button" (click)="edit(cliente)">Editar</button>
+                <button type="button" class="danger" (click)="remove(cliente)">Eliminar</button>
+                <button type="button" class="reporte-btn" (click)="verReporte(cliente)">Reporte</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty">Sin clientes registrados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+@if (reporteCliente) {
+  <div class="modal-backdrop" (click)="cerrarReporte()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Reporte de Paciente</p>
+          <h2>{{ reporteCliente.nombre }} {{ reporteCliente.apellido }}</h2>
+        </div>
+        <button class="modal-close" type="button" (click)="cerrarReporte()">✕</button>
+      </div>
+      <div class="report-client-info">
+        <span>DNI: {{ reporteCliente.documento }}</span>
+        <span>Tel: {{ reporteCliente.telefono || '—' }}</span>
+        <span>Correo: {{ reporteCliente.correo || '—' }}</span>
+      </div>
+      @if (loadingReporte) {
+        <div class="report-loading">Cargando...</div>
+      } @else {
+        <div class="report-section">
+          <h3 class="section-title">Ventas ({{ reporteVentas.length }})</h3>
+          @if (reporteVentas.length === 0) {
+            <p class="report-empty">Sin ventas registradas.</p>
+          } @else {
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Items</th>
+                  <th>Pago</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (v of reporteVentas; track v.idVenta) {
+                  <tr>
+                    <td>{{ v.fechaVenta }}</td>
+                    <td>{{ v.detalles?.length || 0 }} producto(s)</td>
+                    <td>{{ v.metodoPago }}</td>
+                    <td class="total-col">S/ {{ v.total.toFixed(2) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+        <div class="report-section">
+          <h3 class="section-title">Evaluaciones Ópticas ({{ reporteMedidas.length }})</h3>
+          @if (reporteMedidas.length === 0) {
+            <p class="report-empty">Sin evaluaciones registradas.</p>
+          } @else {
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>OD Esfera</th>
+                  <th>OI Esfera</th>
+                  <th>Observaciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of reporteMedidas; track m.idEvaluacion) {
+                  <tr>
+                    <td>{{ m.fechaEvaluacion }}</td>
+                    <td><span class="tipo-badge">{{ m.tipoEvaluacion || '—' }}</span></td>
+                    <td>{{ m.detalles?.[0]?.esfera ?? '—' }}</td>
+                    <td>{{ m.detalles?.[1]?.esfera ?? '—' }}</td>
+                    <td>{{ m.observaciones || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

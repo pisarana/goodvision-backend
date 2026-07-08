@@ -1,0 +1,130 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Control de stock</p>
+    <h1>Inventario</h1>
+  </div>
+  <form class="search" (ngSubmit)="load(searchTerm)">
+    <input name="search" [(ngModel)]="searchTerm" placeholder="Buscar por producto">
+    <button type="submit">Buscar</button>
+  </form>
+</header>
+
+<section class="summary">
+  <article>
+    <span>Items inventariados</span>
+    <strong>{{ inventario.length }}</strong>
+  </article>
+  <article>
+    <span>Stock total</span>
+    <strong>{{ totalStock }}</strong>
+  </article>
+  <article>
+    <span>Por reponer</span>
+    <strong>{{ bajoStock }}</strong>
+  </article>
+  <article>
+    <span>Valor estimado</span>
+    <strong>S/ {{ valorInventario.toFixed(2) }}</strong>
+  </article>
+</section>
+
+@if (message) {
+  <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+    {{ messageType === 'success' ? '✓' : '⚠' }} {{ message }}
+  </div>
+}
+
+<section class="grid">
+  <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+    <h2>{{ form.controls.idInventario.value ? 'Editar stock' : 'Nuevo registro' }}</h2>
+
+    <label>
+      Producto
+      <select formControlName="idProducto"
+        [class.input-error]="form.controls.idProducto.invalid && form.controls.idProducto.touched">
+        <option [ngValue]="0">— Seleccionar producto —</option>
+        @for (producto of productos; track producto.idProducto) {
+          <option [ngValue]="producto.idProducto">{{ producto.nombreProducto }}</option>
+        }
+      </select>
+      @if (form.controls.idProducto.touched && form.controls.idProducto.errors?.['min']) {
+        <small class="field-error">Debes seleccionar un producto.</small>
+      }
+    </label>
+
+    <label>
+      Stock actual
+      <input formControlName="stock" type="number" min="0"
+        [class.input-error]="form.controls.stock.invalid && form.controls.stock.touched">
+      @if (form.controls.stock.touched) {
+        @if (form.controls.stock.errors?.['required']) {
+          <small class="field-error">El stock es obligatorio.</small>
+        } @else if (form.controls.stock.errors?.['min']) {
+          <small class="field-error">El stock no puede ser negativo.</small>
+        }
+      }
+    </label>
+
+    <label>
+      Stock mínimo
+      <input formControlName="stockMinimo" type="number" min="0"
+        [class.input-error]="form.controls.stockMinimo.invalid && form.controls.stockMinimo.touched">
+      @if (form.controls.stockMinimo.touched) {
+        @if (form.controls.stockMinimo.errors?.['required']) {
+          <small class="field-error">El stock mínimo es obligatorio.</small>
+        } @else if (form.controls.stockMinimo.errors?.['min']) {
+          <small class="field-error">El stock mínimo no puede ser negativo.</small>
+        }
+      }
+    </label>
+
+    <div class="actions">
+      <button class="primary" type="submit" [disabled]="loading">Guardar</button>
+      <button class="ghost" type="button" (click)="reset()">Limpiar</button>
+    </div>
+  </form>
+
+  <section class="table-panel">
+    <div class="table-head">
+      <h2>Lista de inventario</h2>
+      <span>{{ inventario.length }} registros</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock</th>
+            <th>Mínimo</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of inventario; track item.idInventario) {
+            <tr>
+              <td>{{ item.producto.nombreProducto }}</td>
+              <td>{{ item.producto.categoria.nombreCategoria || ('#' + item.producto.categoria.idCategoria) }}</td>
+              <td>
+                <span [class.stock-low]="estado(item) === 'Reponer'">{{ item.stock }}</span>
+              </td>
+              <td>{{ item.stockMinimo }}</td>
+              <td>
+                <span class="status" [class.warn]="estado(item) === 'Reponer'">{{ estado(item) }}</span>
+              </td>
+              <td class="row-actions">
+                <button type="button" (click)="edit(item)">Editar</button>
+                <button type="button" class="danger" (click)="remove(item)">Eliminar</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">Sin registros de inventario.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

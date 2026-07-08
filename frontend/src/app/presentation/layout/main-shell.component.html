@@ -1,0 +1,31 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/inicio" aria-label="GoodVision">
+      <img src="assets/brand/goodvision-logo.svg" alt="GoodVision">
+      <span>
+        <strong>GoodVision</strong>
+        <small>Optica</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <a routerLink="/inicio" routerLinkActive="active">Inicio</a>
+      <a routerLink="/productos" routerLinkActive="active">Productos</a>
+      <a routerLink="/categorias" routerLinkActive="active">Categorías</a>
+      <a routerLink="/clientes" routerLinkActive="active">Clientes</a>
+      <a routerLink="/inventario" routerLinkActive="active">Inventario</a>
+      <a routerLink="/ventas" routerLinkActive="active">Ventas</a>
+      <a routerLink="/medidas" routerLinkActive="active">Medidas</a>
+      <a routerLink="/reportes" routerLinkActive="active">Reportes</a>
+      @if (isAdmin) {
+        <a routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
+      }
+    </nav>
+
+    <button class="logout" type="button" (click)="logout()">Salir</button>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

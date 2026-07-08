@@ -1,0 +1,143 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Configuración del Catálogo</p>
+    <h1>Categorías de Productos</h1>
+    <p class="subtitle">Organiza tus productos con categorías claras y ordenadas</p>
+  </div>
+  <div class="stats-pill">
+    <span class="stat-number">{{ categorias.length }}</span>
+    <span class="stat-label">categorías</span>
+  </div>
+</header>
+
+@if (message) {
+  <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+    <span class="alert-icon">{{ messageType === 'success' ? '✓' : '⚠' }}</span>
+    {{ message }}
+  </div>
+}
+
+<section class="grid">
+  <!-- Formulario -->
+  <form class="editor card" [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()">
+    <div class="card-head">
+      <div class="card-icon">{{ editingId ? '✏️' : '➕' }}</div>
+      <h2>{{ editingId ? 'Editar categoría' : 'Nueva categoría' }}</h2>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Nombre de la categoría</span>
+      <input
+        formControlName="nombreCategoria"
+        type="text"
+        placeholder="Ej: Monturas, Lentes de contacto, Solares..."
+        class="field-input"
+        [class.input-error]="categoriaForm.get('nombreCategoria')?.invalid && categoriaForm.get('nombreCategoria')?.touched">
+      @if (categoriaForm.get('nombreCategoria')?.hasError('required') && categoriaForm.get('nombreCategoria')?.touched) {
+        <small class="error-msg">El nombre de la categoría es requerido</small>
+      }
+      @if (categoriaForm.get('nombreCategoria')?.hasError('maxlength') && categoriaForm.get('nombreCategoria')?.touched) {
+        <small class="error-msg">Máximo 100 caracteres</small>
+      }
+    </label>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit" [disabled]="saving">
+        @if (saving) { <span class="spinner"></span> }
+        {{ editingId ? 'Actualizar' : 'Guardar categoría' }}
+      </button>
+      @if (editingId) {
+        <button class="btn btn-ghost" type="button" (click)="limpiarFormulario()">Cancelar</button>
+      }
+    </div>
+
+    <div class="form-tip">
+      <strong>💡 Consejo:</strong> Usa nombres descriptivos como "Monturas de acetato" o "Lentes bifocales" para una mejor organización.
+    </div>
+  </form>
+
+  <!-- Panel derecho -->
+  <section class="card table-card">
+    <div class="card-toolbar">
+      <div>
+        <h2>Listado de categorías</h2>
+        <p class="toolbar-subtitle">{{ filtrarCategorias().length }} de {{ categorias.length }} categorías</p>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Buscar categoría..."
+          class="search-input">
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="loading-state">
+        <div class="loader"></div>
+        <p>Cargando categorías...</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre de categoría</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (categoria of filtrarCategorias(); track categoria.idCategoria) {
+              <tr [class.editing-row]="editingId === categoria.idCategoria">
+                <td>
+                  <span class="id-badge">#{{ categoria.idCategoria }}</span>
+                </td>
+                <td>
+                  <div class="categoria-name">
+                    <span class="cat-dot"></span>
+                    {{ categoria.nombreCategoria }}
+                  </div>
+                </td>
+                <td class="row-actions">
+                  <button
+                    type="button"
+                    class="btn-action btn-edit"
+                    (click)="editarCategoria(categoria)"
+                    title="Editar categoría">
+                    ✏️ Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-action btn-delete"
+                    (click)="eliminarCategoria(categoria)"
+                    title="Eliminar categoría">
+                    🗑️ Eliminar
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="empty-state">
+                  @if (searchTerm) {
+                    <div>
+                      <p class="empty-icon">🔍</p>
+                      <p>No se encontraron categorías para "{{ searchTerm }}"</p>
+                    </div>
+                  } @else {
+                    <div>
+                      <p class="empty-icon">📂</p>
+                      <p>Sin categorías registradas.</p>
+                      <p class="empty-sub">Crea tu primera categoría usando el formulario.</p>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>

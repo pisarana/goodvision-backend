@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/backend.pid
+frontend/frontend-log.txt
+frontend/frontend-startup.log
+
+### Logs ###
+*.log
+backend-new.log
+backend-startup.log
+maven-build.log

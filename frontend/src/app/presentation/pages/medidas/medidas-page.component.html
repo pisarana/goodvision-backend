@@ -1,0 +1,269 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Consulta Optométrica</p>
+    <h1>Evaluación de Medidas</h1>
+  </div>
+  <form class="search" (ngSubmit)="loadEvaluaciones()">
+    <input name="search" [(ngModel)]="searchTerm" placeholder="Buscar paciente...">
+    <button type="submit">Buscar</button>
+  </form>
+</header>
+
+<section class="grid">
+  <!-- Panel izquierdo: Formulario de evaluación -->
+  <div class="left-panel">
+    <!-- Información del paciente -->
+    <div class="editor patient-section">
+      <h2>Paciente</h2>
+      @if (!selectedCliente) {
+        <select (change)="onClienteChange($event)">
+          <option [value]="0">Seleccionar paciente...</option>
+          @for (cliente of clientes; track cliente.idCliente) {
+            <option [value]="cliente.idCliente">
+              {{ cliente.nombre }} {{ cliente.apellido }} - {{ cliente.documento }}
+            </option>
+          }
+        </select>
+      } @else {
+        <div class="selected-patient">
+          <div class="patient-details">
+            <h3>{{ selectedCliente.nombre }} {{ selectedCliente.apellido }}</h3>
+            <div class="patient-info-grid">
+              <div><strong>DNI:</strong> {{ selectedCliente.documento }}</div>
+              <div><strong>Teléfono:</strong> {{ selectedCliente.telefono }}</div>
+              <div><strong>Correo:</strong> {{ selectedCliente.correo }}</div>
+            </div>
+          </div>
+          <button class="ghost" type="button" (click)="selectedCliente = null">Cambiar</button>
+        </div>
+      }
+    </div>
+
+    <!-- Tipo de evaluación -->
+    <div class="editor">
+      <h2>Tipo de Evaluación</h2>
+      <div class="evaluation-types">
+        @for (tipo of tiposEvaluacion; track tipo) {
+          <label class="eval-type-option">
+            <input
+              type="radio"
+              name="tipoEvaluacion"
+              [value]="tipo"
+              [(ngModel)]="tipoEvaluacion">
+            <span>{{ tipo }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Medidas Ojo Derecho -->
+    <div class="editor measurements-card od-card">
+      <div class="card-header">
+        <h2>OD - Ojo Derecho</h2>
+        <span class="eye-indicator">👁️</span>
+      </div>
+
+      <div class="measurements-grid">
+        <label>
+          Esfera (Dioptrías)
+          <input
+            type="number"
+            [(ngModel)]="odEsfera"
+            step="0.25"
+            placeholder="+0.00 / -0.00"
+            class="measurement-input">
+          <span class="hint">Miopía (-) / Hipermetropía (+)</span>
+        </label>
+
+        <label>
+          Cilindro (Dioptrías)
+          <input
+            type="number"
+            [(ngModel)]="odCilindro"
+            step="0.25"
+            placeholder="+0.00 / -0.00"
+            class="measurement-input">
+          <span class="hint">Astigmatismo</span>
+        </label>
+
+        <label>
+          Eje (Grados)
+          <input
+            type="number"
+            [(ngModel)]="odEje"
+            min="0"
+            max="180"
+            placeholder="0-180"
+            class="measurement-input">
+          <span class="hint">Orientación del astigmatismo</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Medidas Ojo Izquierdo -->
+    <div class="editor measurements-card oi-card">
+      <div class="card-header">
+        <h2>OI - Ojo Izquierdo</h2>
+        <span class="eye-indicator">👁️</span>
+      </div>
+
+      <div class="measurements-grid">
+        <label>
+          Esfera (Dioptrías)
+          <input
+            type="number"
+            [(ngModel)]="oiEsfera"
+            step="0.25"
+            placeholder="+0.00 / -0.00"
+            class="measurement-input">
+          <span class="hint">Miopía (-) / Hipermetropía (+)</span>
+        </label>
+
+        <label>
+          Cilindro (Dioptrías)
+          <input
+            type="number"
+            [(ngModel)]="oiCilindro"
+            step="0.25"
+            placeholder="+0.00 / -0.00"
+            class="measurement-input">
+          <span class="hint">Astigmatismo</span>
+        </label>
+
+        <label>
+          Eje (Grados)
+          <input
+            type="number"
+            [(ngModel)]="oiEje"
+            min="0"
+            max="180"
+            placeholder="0-180"
+            class="measurement-input">
+          <span class="hint">Orientación del astigmatismo</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="editor">
+      <h2>Observaciones Clínicas</h2>
+      <textarea
+        [(ngModel)]="observaciones"
+        rows="4"
+        placeholder="Notas adicionales sobre la evaluación, recomendaciones, etc..."></textarea>
+    </div>
+
+    <!-- Acciones -->
+    <div class="editor actions-section">
+      <div class="actions">
+        <button
+          class="primary"
+          type="button"
+          (click)="guardarEvaluacion()"
+          [disabled]="loading || !selectedCliente">
+          Guardar Evaluación
+        </button>
+        <button class="ghost" type="button" (click)="limpiarFormulario()">Limpiar Todo</button>
+      </div>
+
+      @if (message) {
+        <p class="message">{{ message }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Panel derecho: Historial de evaluaciones -->
+  <div class="right-panel">
+    <section class="table-panel">
+      <div class="table-head">
+        <h2>Historial de Evaluaciones</h2>
+        <span>{{ filtrarEvaluaciones().length }} registros</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Paciente</th>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>OD</th>
+              <th>OI</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (evaluacion of filtrarEvaluaciones(); track evaluacion.idEvaluacion) {
+              <tr [class.row-expanded]="expandedId === evaluacion.idEvaluacion">
+                <td class="eval-id">{{ evaluacion.idEvaluacion }}</td>
+                <td class="patient-name">
+                  <strong>{{ evaluacion.cliente.nombre }} {{ evaluacion.cliente.apellido }}</strong>
+                  <small>{{ evaluacion.cliente.documento }}</small>
+                </td>
+                <td>{{ evaluacion.fechaEvaluacion }}</td>
+                <td><span class="eval-type-badge">{{ evaluacion.tipoEvaluacion || '-' }}</span></td>
+                <td class="measurement-cell">{{ getDetallePorOjo(evaluacion, 'OJO_DERECHO') }}</td>
+                <td class="measurement-cell">{{ getDetallePorOjo(evaluacion, 'OJO_IZQUIERDO') }}</td>
+                <td class="row-actions">
+                  <button type="button" class="btn-detail" (click)="toggleDetalle(evaluacion.idEvaluacion!)">
+                    {{ expandedId === evaluacion.idEvaluacion ? '▲' : '▼' }} Detalle
+                  </button>
+                  @if (isAdmin) {
+                    <button type="button" class="danger" (click)="eliminarEvaluacion(evaluacion)">Eliminar</button>
+                  }
+                </td>
+              </tr>
+              @if (expandedId === evaluacion.idEvaluacion) {
+                <tr class="detail-row">
+                  <td colspan="7">
+                    <div class="detail-panel">
+                      <div class="detail-grid">
+                        @for (det of evaluacion.detalles; track det.ojo) {
+                          <div class="eye-card" [class.od]="det.ojo === 'OJO_DERECHO'" [class.oi]="det.ojo === 'OJO_IZQUIERDO'">
+                            <div class="eye-label">{{ det.ojo === 'OJO_DERECHO' ? 'OD — Ojo Derecho' : 'OI — Ojo Izquierdo' }}</div>
+                            <div class="eye-values">
+                              <div class="eye-val"><span>Esfera</span><strong>{{ det.esfera !== null ? ((det.esfera >= 0 ? '+' : '') + (det.esfera | number:'1.2-2')) : '—' }}</strong></div>
+                              <div class="eye-val"><span>Cilindro</span><strong>{{ det.cilindro !== null ? ((det.cilindro >= 0 ? '+' : '') + (det.cilindro | number:'1.2-2')) : '—' }}</strong></div>
+                              <div class="eye-val"><span>Eje</span><strong>{{ det.eje !== null ? (det.eje + '°') : '—' }}</strong></div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      @if (evaluacion.observaciones) {
+                        <div class="obs-row"><strong>Observaciones:</strong> {{ evaluacion.observaciones }}</div>
+                      }
+                      <div class="obs-row"><strong>Especialista:</strong> {{ evaluacion.usuario?.nombre }}</div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty">Sin evaluaciones registradas</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Panel de información -->
+    <div class="info-panel editor">
+      <h3>Guía de Medidas</h3>
+      <div class="info-content">
+        <div class="info-item">
+          <strong>Esfera:</strong>
+          <p>Valores negativos (-) indican miopía. Valores positivos (+) indican hipermetropía.</p>
+        </div>
+        <div class="info-item">
+          <strong>Cilindro:</strong>
+          <p>Mide el astigmatismo. Un valor de 0 significa que no hay astigmatismo.</p>
+        </div>
+        <div class="info-item">
+          <strong>Eje:</strong>
+          <p>Orientación del astigmatismo en grados (0° a 180°). Solo se usa si hay cilindro.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

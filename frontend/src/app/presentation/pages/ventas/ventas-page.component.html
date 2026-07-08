@@ -1,0 +1,274 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Punto de Venta</p>
+    <h1>Nueva Venta</h1>
+  </div>
+  <div class="head-stats">
+    <div class="stat-chip">
+      <span class="stat-val">{{ ventas.length }}</span>
+      <span class="stat-lbl">ventas totales</span>
+    </div>
+    <div class="stat-chip accent">
+      <span class="stat-val">S/ {{ getTotalVentasHoy().toFixed(2) }}</span>
+      <span class="stat-lbl">hoy</span>
+    </div>
+  </div>
+</header>
+
+@if (message) {
+  <div class="alert" [class.alert-success]="messageType === 'success'" [class.alert-error]="messageType === 'error'">
+    <span class="alert-icon">{{ messageType === 'success' ? '✓' : '⚠' }}</span>
+    {{ message }}
+  </div>
+}
+
+<section class="pos-grid">
+  <!-- ══ PANEL IZQUIERDO ══ -->
+  <div class="left-panel">
+
+    <!-- Catálogo de Productos -->
+    <div class="card">
+      <div class="card-header">
+        <h2>🛍 Catálogo de Productos</h2>
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar producto..." class="search-in">
+        </div>
+      </div>
+
+      <div class="products-grid">
+        @for (producto of filtrarProductos(); track producto.idProducto) {
+          <div
+            class="product-card"
+            [class.selected]="productoSeleccionado?.idProducto === producto.idProducto"
+            [class.out-of-stock]="!stockDisponible(producto)"
+            (click)="stockDisponible(producto) && selectProducto(producto)">
+            <div class="product-cat">{{ producto.categoria ? producto.categoria.nombreCategoria : 'General' }}</div>
+            <div class="product-name">{{ producto.nombreProducto }}</div>
+            <div class="product-price">S/ {{ producto.precio.toFixed(2) }}</div>
+            @if (getStock(producto.idProducto!) !== -1) {
+              <div class="product-stock" [class.stock-warn]="getStock(producto.idProducto!) <= 3">
+                Stock: {{ getStock(producto.idProducto!) }}
+              </div>
+            }
+          </div>
+        } @empty {
+          <div class="empty-products">
+            <p>📦</p>
+            <p>No hay productos disponibles</p>
+          </div>
+        }
+      </div>
+
+      @if (productoSeleccionado) {
+        <div class="add-to-cart-bar">
+          <div class="selected-product-info">
+            <strong>{{ productoSeleccionado.nombreProducto }}</strong>
+            <span>S/ {{ productoSeleccionado.precio.toFixed(2) }}</span>
+          </div>
+          <div class="qty-wrap">
+            <label>Cant:</label>
+            <input type="number" [(ngModel)]="cantidadSeleccionada" min="1" max="99" class="qty-input">
+          </div>
+          <button class="btn btn-add" (click)="agregarAlCarrito()">+ Agregar</button>
+        </div>
+      }
+    </div>
+
+    <!-- Carrito -->
+    <div class="card cart-card">
+      <div class="card-header">
+        <h2>🛒 Carrito</h2>
+        @if (carrito.length > 0) {
+          <span class="cart-count">{{ carrito.length }} producto(s)</span>
+        }
+      </div>
+
+      @if (carrito.length === 0) {
+        <div class="empty-cart">
+          <p>🛒</p>
+          <p>El carrito está vacío</p>
+          <small>Selecciona productos del catálogo</small>
+        </div>
+      } @else {
+        <div class="cart-items">
+          @for (item of carrito; track $index) {
+            <div class="cart-item">
+              <div class="item-info">
+                <div class="item-name">{{ item.producto.nombreProducto }}</div>
+                <div class="item-cat">{{ item.producto.categoria ? item.producto.categoria.nombreCategoria : 'General' }}</div>
+              </div>
+              <div class="item-controls">
+                <input
+                  type="number"
+                  [(ngModel)]="item.cantidad"
+                  (ngModelChange)="actualizarCantidad(item, item.cantidad)"
+                  min="1"
+                  class="qty-input small">
+                <span class="item-price">S/ {{ item.subtotal.toFixed(2) }}</span>
+                <button class="btn-remove" (click)="eliminarDelCarrito($index)" title="Eliminar">✕</button>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="cart-total">
+          <span>TOTAL</span>
+          <span class="total-val">S/ {{ calcularTotal().toFixed(2) }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ══ PANEL DERECHO ══ -->
+  <div class="right-panel">
+
+    <!-- Cliente -->
+    <div class="card form-card">
+      <div class="card-header">
+        <h2>👤 Cliente</h2>
+      </div>
+      @if (!selectedCliente) {
+        <select (change)="onClienteChange($event)" class="select-full">
+          <option [value]="0">— Seleccionar cliente —</option>
+          @for (cliente of clientes; track cliente.idCliente) {
+            <option [value]="cliente.idCliente">
+              {{ cliente.nombre }} {{ cliente.apellido }} · {{ cliente.documento }}
+            </option>
+          }
+        </select>
+      } @else {
+        <div class="selected-client">
+          <div class="client-avatar">{{ selectedCliente.nombre[0] }}{{ selectedCliente.apellido[0] }}</div>
+          <div class="client-info">
+            <strong>{{ selectedCliente.nombre }} {{ selectedCliente.apellido }}</strong>
+            <span>{{ selectedCliente.documento }}</span>
+            <span>{{ selectedCliente.telefono }}</span>
+          </div>
+          <button class="btn-link" (click)="selectedCliente = null">Cambiar</button>
+        </div>
+      }
+    </div>
+
+    <!-- Método de Pago -->
+    <div class="card form-card">
+      <div class="card-header">
+        <h2>💳 Método de Pago</h2>
+      </div>
+      <div class="payment-grid">
+        @for (metodo of ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'YAPE']; track metodo) {
+          <label class="payment-opt" [class.active]="metodoPago === metodo">
+            <input type="radio" name="metodoPago" [value]="metodo" [(ngModel)]="metodoPago" hidden>
+            <span class="pay-icon">{{ getMetodoPagoIcon(metodo) }}</span>
+            <span class="pay-label">{{ metodo === 'YAPE' ? 'Yape / Plin' : metodo | titlecase }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="card form-card summary-card">
+      <div class="card-header">
+        <h2>📋 Resumen</h2>
+      </div>
+      <div class="summary-rows">
+        <div class="sum-row">
+          <span>Cliente</span>
+          <span>{{ selectedCliente ? selectedCliente.nombre + ' ' + selectedCliente.apellido : '—' }}</span>
+        </div>
+        <div class="sum-row">
+          <span>Productos</span>
+          <span>{{ carrito.length }} item(s)</span>
+        </div>
+        <div class="sum-row">
+          <span>Pago</span>
+          <span>{{ getMetodoPagoIcon(metodoPago) }} {{ metodoPago }}</span>
+        </div>
+        <div class="sum-row total">
+          <span>TOTAL</span>
+          <span>S/ {{ calcularTotal().toFixed(2) }}</span>
+        </div>
+      </div>
+      <div class="summary-actions">
+        <button
+          class="btn btn-register"
+          (click)="registrarVenta()"
+          [disabled]="registrando || !selectedCliente || carrito.length === 0">
+          @if (registrando) { <span class="spinner"></span> }
+          {{ registrando ? 'Registrando...' : '✓ Registrar Venta' }}
+        </button>
+        <button class="btn btn-clear" (click)="limpiarVenta()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Historial de Ventas -->
+    <div class="card historial-card">
+      <div class="card-header">
+        <h2>📜 Historial</h2>
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input type="text" [(ngModel)]="historialSearch" placeholder="Buscar venta..." class="search-in">
+        </div>
+      </div>
+
+      @if (loading) {
+        <div class="loading-state"><div class="loader"></div><span>Cargando...</span></div>
+      } @else {
+        <div class="historial-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Pago</th>
+                <th>Total</th>
+                @if (isAdmin) { <th></th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (venta of filtrarVentas(); track venta.idVenta) {
+                <tr (click)="toggleExpand(venta.idVenta!)" style="cursor:pointer">
+                  <td><span class="venta-id">@if (isExpanded(venta.idVenta!)) { ▾ } @else { ▸ } #{{ venta.idVenta }}</span></td>
+                  <td class="client-cell">
+                    <strong>{{ venta.cliente.nombre }} {{ venta.cliente.apellido }}</strong>
+                  </td>
+                  <td class="date-cell">{{ venta.fechaVenta }}</td>
+                  <td><span class="pay-badge">{{ getMetodoPagoIcon(venta.metodoPago) }} {{ venta.metodoPago }}</span></td>
+                  <td class="total-cell">S/ {{ venta.total.toFixed(2) }}</td>
+                  @if (isAdmin) {
+                    <td>
+                      <button class="btn-delete-venta" (click)="$event.stopPropagation(); eliminarVenta(venta)" title="Eliminar venta">🗑️</button>
+                    </td>
+                  }
+                </tr>
+                @if (isExpanded(venta.idVenta!)) {
+                  <tr class="detail-row">
+                    <td [attr.colspan]="isAdmin ? 6 : 5" class="detail-cell">
+                      <div class="detail-products">
+                        @for (d of venta.detalles; track $index) {
+                          <span class="detail-item">{{ d.producto.nombreProducto }} × {{ d.cantidad }} — S/ {{ d.subtotal.toFixed(2) }}</span>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="isAdmin ? 6 : 5" class="empty-table">
+                    Sin ventas registradas
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (!isAdmin && ventas.length > 0) {
+          <div class="no-admin-note">
+            🔒 Solo administradores pueden eliminar ventas
+          </div>
+        }
+      }
+    </div>
+  </div>
+</section>

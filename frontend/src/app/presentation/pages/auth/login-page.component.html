@@ -1,0 +1,131 @@
+<main class="auth-page">
+  <section class="hero">
+    <img src="assets/brand/goodvision-logo.svg" alt="GoodVision">
+    <p class="eyebrow">Óptica Good Vision</p>
+    <h1>Sistema de gestión de inventario y ventas.</h1>
+  </section>
+
+  <section class="panel" aria-label="Acceso">
+    <div class="panel-head">
+      <h2>{{ registerMode ? 'Crear usuario' : 'Ingreso al sistema' }}</h2>
+      <button type="button" class="ghost" (click)="registerMode = !registerMode; message = ''">
+        {{ registerMode ? 'Ya tengo cuenta' : 'Registrar' }}
+      </button>
+    </div>
+
+    @if (!registerMode) {
+      <form [formGroup]="loginForm" (ngSubmit)="login()" class="form">
+        <label>
+          Correo electrónico
+          <input type="email" formControlName="correo" placeholder="usuario@goodvision.pe"
+            [class.input-error]="loginForm.controls.correo.invalid && loginForm.controls.correo.touched">
+          @if (loginForm.controls.correo.touched) {
+            @if (loginForm.controls.correo.errors?.['required']) {
+              <small class="field-error">El correo es obligatorio.</small>
+            } @else if (loginForm.controls.correo.errors?.['email']) {
+              <small class="field-error">Ingresa un correo válido (ej: nombre&#64;dominio.com).</small>
+            }
+          }
+        </label>
+        <label>
+          Contraseña
+          <input type="password" formControlName="password" placeholder="Mínimo 6 caracteres"
+            [class.input-error]="loginForm.controls.password.invalid && loginForm.controls.password.touched">
+          @if (loginForm.controls.password.touched) {
+            @if (loginForm.controls.password.errors?.['required']) {
+              <small class="field-error">La contraseña es obligatoria.</small>
+            } @else if (loginForm.controls.password.errors?.['minlength']) {
+              <small class="field-error">La contraseña debe tener al menos 6 caracteres.</small>
+            }
+          }
+        </label>
+        <button type="submit" class="primary" [disabled]="loading">
+          @if (loading) { <span class="btn-spinner"></span> }
+          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+      </form>
+    } @else {
+      <form [formGroup]="registerForm" (ngSubmit)="register()" class="form grid">
+        <label>
+          Nombre
+          <input type="text" formControlName="nombre" placeholder="Solo letras"
+            [class.input-error]="registerForm.controls.nombre.invalid && registerForm.controls.nombre.touched">
+          @if (registerForm.controls.nombre.touched) {
+            @if (registerForm.controls.nombre.errors?.['required']) {
+              <small class="field-error">El nombre es obligatorio.</small>
+            } @else if (registerForm.controls.nombre.errors?.['pattern']) {
+              <small class="field-error">Solo se permiten letras y espacios.</small>
+            } @else if (registerForm.controls.nombre.errors?.['maxlength']) {
+              <small class="field-error">Máximo 60 caracteres.</small>
+            }
+          }
+        </label>
+        <label>
+          Apellido
+          <input type="text" formControlName="apellido" placeholder="Solo letras"
+            [class.input-error]="registerForm.controls.apellido.invalid && registerForm.controls.apellido.touched">
+          @if (registerForm.controls.apellido.touched) {
+            @if (registerForm.controls.apellido.errors?.['required']) {
+              <small class="field-error">El apellido es obligatorio.</small>
+            } @else if (registerForm.controls.apellido.errors?.['pattern']) {
+              <small class="field-error">Solo se permiten letras y espacios.</small>
+            }
+          }
+        </label>
+        <label class="full">
+          Correo electrónico
+          <input type="email" formControlName="correo" placeholder="correo@dominio.com"
+            [class.input-error]="registerForm.controls.correo.invalid && registerForm.controls.correo.touched">
+          @if (registerForm.controls.correo.touched) {
+            @if (registerForm.controls.correo.errors?.['required']) {
+              <small class="field-error">El correo es obligatorio.</small>
+            } @else if (registerForm.controls.correo.errors?.['email']) {
+              <small class="field-error">Ingresa un correo válido.</small>
+            }
+          }
+        </label>
+        <label>
+          Teléfono <span class="optional">(opcional)</span>
+          <input type="tel" formControlName="telefono" placeholder="999999999"
+            [class.input-error]="registerForm.controls.telefono.invalid && registerForm.controls.telefono.touched">
+          @if (registerForm.controls.telefono.touched && registerForm.controls.telefono.errors?.['pattern']) {
+            <small class="field-error">Ingresa 9 dígitos sin espacios (ej: 987654321).</small>
+          }
+        </label>
+        <label>
+          Rol de acceso
+          <select formControlName="role">
+            <option value="ADMIN">Administrador</option>
+            <option value="ESPECIALISTA">Especialista</option>
+          </select>
+        </label>
+        <label class="full">
+          Dirección <span class="optional">(opcional)</span>
+          <input type="text" formControlName="direccion" placeholder="Av. Ejemplo 123, Lima">
+        </label>
+        <label class="full">
+          Contraseña
+          <input type="password" formControlName="password" placeholder="Mínimo 8 caracteres"
+            [class.input-error]="registerForm.controls.password.invalid && registerForm.controls.password.touched">
+          @if (registerForm.controls.password.touched) {
+            @if (registerForm.controls.password.errors?.['required']) {
+              <small class="field-error">La contraseña es obligatoria.</small>
+            } @else if (registerForm.controls.password.errors?.['minlength']) {
+              <small class="field-error">La contraseña debe tener al menos 8 caracteres.</small>
+            }
+          }
+        </label>
+        <button type="submit" class="primary full" [disabled]="loading">
+          @if (loading) { <span class="btn-spinner"></span> }
+          {{ loading ? 'Creando cuenta...' : 'Crear acceso' }}
+        </button>
+      </form>
+    }
+
+    @if (message) {
+      <p class="message" [class.message-success]="messageType === 'success'" [class.message-error]="messageType === 'error'">
+        {{ messageType === 'success' ? '✓' : '⚠' }} {{ message }}
+      </p>
+    }
+  </section>
+</main>
