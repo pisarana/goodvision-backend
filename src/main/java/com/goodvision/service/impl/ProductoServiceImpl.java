@@ -6,7 +6,9 @@ import com.goodvision.exception.BusinessRuleViolationException;
 import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.ProductoRepository;
 import com.goodvision.service.ProductoService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -58,11 +60,17 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
+    @Transactional
     public void eliminarProducto(Long id) {
-
         Producto producto = obtenerProductoPorId(id);
-
-        productoRepository.delete(producto);
+        try {
+            productoRepository.delete(producto);
+            productoRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessRuleViolationException(
+                "No se puede eliminar el producto porque tiene ventas o registros de inventario asociados"
+            );
+        }
     }
 
     @Override

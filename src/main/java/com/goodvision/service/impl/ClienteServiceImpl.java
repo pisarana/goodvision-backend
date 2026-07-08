@@ -1,11 +1,14 @@
 package com.goodvision.service.impl;
 
 import com.goodvision.entity.Cliente;
+import com.goodvision.exception.BusinessRuleViolationException;
 import com.goodvision.exception.DuplicateResourceException;
 import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.ClienteRepository;
 import com.goodvision.service.ClienteService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,11 +68,17 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @Transactional
     public void eliminarCliente(Long id) {
-
         Cliente cliente = obtenerClientePorId(id);
-
-        clienteRepository.delete(cliente);
+        try {
+            clienteRepository.delete(cliente);
+            clienteRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessRuleViolationException(
+                "No se puede eliminar el cliente porque tiene ventas o evaluaciones asociadas"
+            );
+        }
     }
 
     @Override
