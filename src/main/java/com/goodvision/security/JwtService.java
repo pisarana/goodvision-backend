@@ -26,11 +26,12 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // GENERATE JWT TOKEN
-    public String generateToken(String correo) {
+    // GENERATE JWT TOKEN WITH ROLE
+    public String generateToken(String correo, String role) {
 
         return Jwts.builder()
                 .subject(correo)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -41,6 +42,12 @@ public class JwtService {
     public String extractCorreo(String token) {
 
         return extractClaims(token).getSubject();
+    }
+
+    // EXTRACT ROLE FROM TOKEN
+    public String extractRole(String token) {
+
+        return extractClaims(token).get("role", String.class);
     }
 
     // VALIDATE TOKEN

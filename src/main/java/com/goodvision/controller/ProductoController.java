@@ -2,6 +2,7 @@ package com.goodvision.controller;
 
 import com.goodvision.entity.Producto;
 import com.goodvision.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<Producto> guardarProducto(@RequestBody Producto producto) {
+    public ResponseEntity<Producto> guardarProducto(@RequestBody @Valid Producto producto) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -42,7 +43,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody Producto producto) {
+            @RequestBody @Valid Producto producto) {
 
         return ResponseEntity.ok(
                 productoService.actualizarProducto(id, producto)

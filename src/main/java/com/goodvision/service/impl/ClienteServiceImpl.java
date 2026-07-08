@@ -1,11 +1,14 @@
 package com.goodvision.service.impl;
 
 import com.goodvision.entity.Cliente;
+import com.goodvision.exception.DuplicateResourceException;
+import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.ClienteRepository;
 import com.goodvision.service.ClienteService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClienteServiceImpl implements ClienteService {
@@ -24,7 +27,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public Cliente obtenerClientePorId(Long id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente", "id", id));
     }
 
     @Override
@@ -32,7 +35,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         clienteRepository.findByDocumento(cliente.getDocumento())
                 .ifPresent(c -> {
-                    throw new RuntimeException("Ya existe un cliente con ese documento");
+                    throw new DuplicateResourceException("Cliente", "documento", cliente.getDocumento());
                 });
 
         return clienteRepository.save(cliente);
@@ -42,6 +45,14 @@ public class ClienteServiceImpl implements ClienteService {
     public Cliente actualizarCliente(Long id, Cliente cliente) {
 
         Cliente clienteExistente = obtenerClientePorId(id);
+
+        // Check if documento is being changed to a duplicate
+        if (!clienteExistente.getDocumento().equals(cliente.getDocumento())) {
+            Optional<Cliente> clienteConMismoDocumento = clienteRepository.findByDocumento(cliente.getDocumento());
+            if (clienteConMismoDocumento.isPresent() && !clienteConMismoDocumento.get().getIdCliente().equals(id)) {
+                throw new DuplicateResourceException("Cliente", "documento", cliente.getDocumento());
+            }
+        }
 
         clienteExistente.setNombre(cliente.getNombre());
         clienteExistente.setApellido(cliente.getApellido());

@@ -44,15 +44,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
 
-            // EXTRACT USER EMAIL
+            // EXTRACT USER EMAIL AND ROLE
             String correo = jwtService.extractCorreo(token);
+            String role = jwtService.extractRole(token);
 
-            // CREATE AUTHENTICATION OBJECT
+            // CREATE AUTHENTICATION OBJECT WITH ROLE
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             correo,
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
             // SET AUTHENTICATED USER

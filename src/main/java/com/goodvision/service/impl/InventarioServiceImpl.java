@@ -2,6 +2,9 @@ package com.goodvision.service.impl;
 
 import com.goodvision.entity.Inventario;
 import com.goodvision.entity.Producto;
+import com.goodvision.exception.BusinessRuleViolationException;
+import com.goodvision.exception.DuplicateResourceException;
+import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.InventarioRepository;
 import com.goodvision.repository.ProductoRepository;
 import com.goodvision.service.InventarioService;
@@ -31,7 +34,7 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     public Inventario obtenerInventarioPorId(Long id) {
         return inventarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Inventario", "id", id));
     }
 
     @Override
@@ -40,7 +43,11 @@ public class InventarioServiceImpl implements InventarioService {
 
         inventarioRepository.findByProductoIdProducto(producto.getIdProducto())
                 .ifPresent(existente -> {
-                    throw new RuntimeException("El producto ya tiene inventario registrado");
+                    throw new DuplicateResourceException(
+                            "Inventario",
+                            "producto",
+                            producto.getNombreProducto()
+                    );
                 });
 
         inventario.setProducto(producto);
@@ -57,7 +64,11 @@ public class InventarioServiceImpl implements InventarioService {
         inventarioRepository.findByProductoIdProducto(producto.getIdProducto())
                 .filter(existente -> !existente.getIdInventario().equals(id))
                 .ifPresent(existente -> {
-                    throw new RuntimeException("El producto ya tiene inventario registrado");
+                    throw new DuplicateResourceException(
+                            "Inventario",
+                            "producto",
+                            producto.getNombreProducto()
+                    );
                 });
 
         inventarioExistente.setProducto(producto);
@@ -81,11 +92,15 @@ public class InventarioServiceImpl implements InventarioService {
 
     private Producto obtenerProducto(Inventario inventario) {
         if (inventario.getProducto() == null || inventario.getProducto().getIdProducto() == null) {
-            throw new RuntimeException("Producto requerido");
+            throw new BusinessRuleViolationException("Debe especificar un producto válido para el inventario");
         }
 
         return productoRepository.findById(inventario.getProducto().getIdProducto())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Producto",
+                        "id",
+                        inventario.getProducto().getIdProducto()
+                ));
     }
 
     private void normalizarValores(Inventario inventario) {

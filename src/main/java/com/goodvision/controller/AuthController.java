@@ -4,6 +4,7 @@ import com.goodvision.dto.LoginRequest;
 import com.goodvision.dto.LoginResponse;
 import com.goodvision.dto.RegisterRequest;
 import com.goodvision.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class AuthController {
     // REGISTER USER
     @PostMapping("/register")
     public ResponseEntity<String> register(
-            @RequestBody RegisterRequest request) {
+            @RequestBody @Valid RegisterRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -32,7 +33,7 @@ public class AuthController {
     // LOGIN USER
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest request) {
+            @RequestBody @Valid LoginRequest request) {
 
         return ResponseEntity.ok(
                 authService.login(request)

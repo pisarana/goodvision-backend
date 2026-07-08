@@ -2,6 +2,7 @@ package com.goodvision.controller;
 
 import com.goodvision.entity.Inventario;
 import com.goodvision.service.InventarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class InventarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Inventario> guardarInventario(@RequestBody Inventario inventario) {
+    public ResponseEntity<Inventario> guardarInventario(@RequestBody @Valid Inventario inventario) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(inventarioService.guardarInventario(inventario));
@@ -39,7 +40,7 @@ public class InventarioController {
     @PutMapping("/{id}")
     public ResponseEntity<Inventario> actualizarInventario(
             @PathVariable Long id,
-            @RequestBody Inventario inventario) {
+            @RequestBody @Valid Inventario inventario) {
 
         return ResponseEntity.ok(inventarioService.actualizarInventario(id, inventario));
     }

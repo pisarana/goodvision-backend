@@ -1,6 +1,9 @@
 package com.goodvision.service.impl;
 
+import com.goodvision.entity.Categoria;
 import com.goodvision.entity.Producto;
+import com.goodvision.exception.BusinessRuleViolationException;
+import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.ProductoRepository;
 import com.goodvision.service.ProductoService;
 import org.springframework.stereotype.Service;
@@ -24,11 +27,16 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public Producto obtenerProductoPorId(Long id) {
         return productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
     }
 
     @Override
     public Producto guardarProducto(Producto producto) {
+        // Validate category exists
+        if (producto.getCategoria() == null || producto.getCategoria().getIdCategoria() == null) {
+            throw new BusinessRuleViolationException("Debe especificar una categoría válida para el producto");
+        }
+
         return productoRepository.save(producto);
     }
 
@@ -36,6 +44,11 @@ public class ProductoServiceImpl implements ProductoService {
     public Producto actualizarProducto(Long id, Producto producto) {
 
         Producto productoExistente = obtenerProductoPorId(id);
+
+        // Validate category exists
+        if (producto.getCategoria() == null || producto.getCategoria().getIdCategoria() == null) {
+            throw new BusinessRuleViolationException("Debe especificar una categoría válida para el producto");
+        }
 
         productoExistente.setNombreProducto(producto.getNombreProducto());
         productoExistente.setPrecio(producto.getPrecio());

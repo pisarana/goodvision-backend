@@ -4,6 +4,9 @@ import com.goodvision.dto.LoginRequest;
 import com.goodvision.dto.LoginResponse;
 import com.goodvision.dto.RegisterRequest;
 import com.goodvision.entity.Usuario;
+import com.goodvision.exception.BusinessRuleViolationException;
+import com.goodvision.exception.DuplicateResourceException;
+import com.goodvision.exception.ResourceNotFoundException;
 import com.goodvision.repository.UsuarioRepository;
 import com.goodvision.security.JwtService;
 import com.goodvision.service.AuthService;
@@ -34,8 +37,7 @@ public class AuthServiceImpl implements AuthService {
 
         // VERIFY IF EMAIL EXISTS
         if (usuarioRepository.findByCorreo(request.getCorreo()).isPresent()) {
-
-            throw new RuntimeException("El correo ya está registrado");
+            throw new DuplicateResourceException("Usuario", "correo", request.getCorreo());
         }
 
         Usuario usuario = new Usuario();
@@ -68,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         Usuario usuario = usuarioRepository.findByCorreo(
                 request.getCorreo()
         ).orElseThrow(() ->
-                new RuntimeException("Usuario no encontrado")
+                new ResourceNotFoundException("Usuario", "correo", request.getCorreo())
         );
 
         // VALIDATE PASSWORD
@@ -79,15 +81,15 @@ public class AuthServiceImpl implements AuthService {
                 );
 
         if (!passwordCorrect) {
-
-            throw new RuntimeException("Contraseña incorrecta");
+            throw new BusinessRuleViolationException("Contraseña incorrecta");
         }
 
-        // GENERATE JWT TOKEN
+        // GENERATE JWT TOKEN WITH ROLE
         String token = jwtService.generateToken(
-                usuario.getCorreo()
+                usuario.getCorreo(),
+                usuario.getRole().name()
         );
 
-        return new LoginResponse(token);
+        return new LoginResponse(token, usuario.getIdUsuario(), usuario.getRole().name());
     }
 }
