@@ -167,7 +167,7 @@
                 @for (v of reporteVentas; track v.idVenta) {
                   <tr>
                     <td>{{ v.fechaVenta }}</td>
-                    <td>{{ v.detalles?.length || 0 }} producto(s)</td>
+                    <td>{{ v.detalles.length }} producto(s)</td>
                     <td>{{ v.metodoPago }}</td>
                     <td class="total-col">S/ {{ v.total.toFixed(2) }}</td>
                   </tr>
@@ -196,8 +196,8 @@
                   <tr>
                     <td>{{ m.fechaEvaluacion }}</td>
                     <td><span class="tipo-badge">{{ m.tipoEvaluacion || '—' }}</span></td>
-                    <td>{{ m.detalles?.[0]?.esfera ?? '—' }}</td>
-                    <td>{{ m.detalles?.[1]?.esfera ?? '—' }}</td>
+                    <td>{{ m.detalles[0]?.esfera ?? '—' }}</td>
+                    <td>{{ m.detalles[1]?.esfera ?? '—' }}</td>
                     <td>{{ m.observaciones || '—' }}</td>
                   </tr>
                 }
