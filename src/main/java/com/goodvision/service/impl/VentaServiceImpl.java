@@ -98,8 +98,16 @@ public class VentaServiceImpl implements VentaService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         Venta venta = findById(id);
+        for (DetalleVenta detalle : venta.getDetalles()) {
+            inventarioRepository.findByProductoIdProducto(detalle.getProducto().getIdProducto())
+                    .ifPresent(inv -> {
+                        inv.setStock(inv.getStock() + detalle.getCantidad());
+                        inventarioRepository.save(inv);
+                    });
+        }
         ventaRepository.delete(venta);
     }
 }

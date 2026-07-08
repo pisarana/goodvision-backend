@@ -1,8 +1,11 @@
 package com.goodvision.controller;
 
+import com.goodvision.dto.RegisterRequest;
 import com.goodvision.entity.Usuario;
+import com.goodvision.service.AuthService;
 import com.goodvision.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,9 +18,18 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final AuthService authService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, AuthService authService) {
         this.usuarioService = usuarioService;
+        this.authService = authService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> create(@RequestBody @Valid RegisterRequest request) {
+        String result = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @GetMapping
